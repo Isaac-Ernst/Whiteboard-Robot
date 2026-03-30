@@ -1,46 +1,68 @@
 import RPi.GPIO as GPIO
 import time
 
-DIR_PIN = 4
-STEP_PIN = 17
-EN_PIN = 5 # The new Enable pin
+# --- Motor 1 Pins (Left Side) ---
+M1_DIR = 4
+M1_STEP = 17
+M1_EN = 5 
+
+# --- Motor 2 Pins (Right Side) ---
+M2_DIR = 27
+M2_STEP = 22
+M2_EN = 6
 
 STEPS_PER_REV = 200 
 DELAY = 0.005 
 
 def setup():
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(DIR_PIN, GPIO.OUT)
-    GPIO.setup(STEP_PIN, GPIO.OUT)
-    GPIO.setup(EN_PIN, GPIO.OUT)
     
-    # Start with the motor disabled (HIGH = OFF)
-    GPIO.output(EN_PIN, GPIO.HIGH) 
+    # Setup all pins as outputs
+    pins = [M1_DIR, M1_STEP, M1_EN, M2_DIR, M2_STEP, M2_EN]
+    for pin in pins:
+        GPIO.setup(pin, GPIO.OUT)
+    
+    # Start with both motors disabled (HIGH = OFF)
+    GPIO.output(M1_EN, GPIO.HIGH)
+    GPIO.output(M2_EN, GPIO.HIGH)
 
-def spin_motor(direction, steps, delay):
-    # Wake the motor up (LOW = ON)
-    GPIO.output(EN_PIN, GPIO.LOW)
-    time.sleep(0.01) # Give it a tiny fraction of a second to wake up
+def spin_dual_motors(steps, delay):
+    # Wake both motors up (LOW = ON)
+    GPIO.output(M1_EN, GPIO.LOW)
+    GPIO.output(M2_EN, GPIO.LOW)
+    time.sleep(0.01) # Brief pause to wake up
     
-    GPIO.output(DIR_PIN, direction)
+    # Set Motor 1 to Clockwise (True/HIGH)
+    GPIO.output(M1_DIR, True)
+    # Set Motor 2 to Counter-Clockwise (False/LOW)
+    GPIO.output(M2_DIR, False) 
     
+    # Pulse BOTH step pins at the exact same time
     for _ in range(steps):
-        GPIO.output(STEP_PIN, GPIO.HIGH)
-        time.sleep(delay)
-        GPIO.output(STEP_PIN, GPIO.LOW)
+        GPIO.output(M1_STEP, GPIO.HIGH)
+        GPIO.output(M2_STEP, GPIO.HIGH)
         time.sleep(delay)
         
-    # Put the motor back to sleep when finished moving (HIGH = OFF)
-    GPIO.output(EN_PIN, GPIO.HIGH)
+        GPIO.output(M1_STEP, GPIO.LOW)
+        GPIO.output(M2_STEP, GPIO.LOW)
+        time.sleep(delay)
+        
+    # Put both motors back to sleep when finished
+    GPIO.output(M1_EN, GPIO.HIGH)
+    GPIO.output(M2_EN, GPIO.HIGH)
 
 try:
     setup()
-    print("Spinning Clockwise...")
-    spin_motor(True, STEPS_PER_REV, DELAY)
+    print("Motors are starting full rotation in opposite directions...")
+    
+    # Run the function for 1 full revolution
+    spin_dual_motors(STEPS_PER_REV, DELAY)
+    
+    print("Rotation complete.")
 
 except KeyboardInterrupt:
     print("Test stopped by user.")
 
 finally:
     GPIO.cleanup()
-    print("GPIO Cleaned up. Motor disabled and safe.")
+    print("GPIO Cleaned up. Motors disabled and safe.")
