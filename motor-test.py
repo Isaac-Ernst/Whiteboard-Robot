@@ -64,5 +64,7 @@ except KeyboardInterrupt:
     print("Test stopped by user.")
 
 finally:
-    GPIO.cleanup()
+    GPIO.output(M1_EN, GPIO.HIGH)
+    GPIO.output(M2_EN, GPIO.HIGH)
+    
     print("GPIO Cleaned up. Motors disabled and safe.")
