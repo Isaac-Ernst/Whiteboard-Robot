@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import time
 
 DIR_PIN = 4
-STEP_PIN = 7
+STEP_PIN = 17
 EN_PIN = 5 # The new Enable pin
 
 STEPS_PER_REV = 200 
