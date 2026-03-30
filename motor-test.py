@@ -1,9 +1,9 @@
 import RPi.GPIO as GPIO
 import time
 
-DIR_PIN = 20
-STEP_PIN = 21
-EN_PIN = 22 # The new Enable pin
+DIR_PIN = 4
+STEP_PIN = 7
+EN_PIN = 5 # The new Enable pin
 
 STEPS_PER_REV = 200 
 DELAY = 0.005 
@@ -44,4 +44,3 @@ except KeyboardInterrupt:
 finally:
     GPIO.cleanup()
     print("GPIO Cleaned up. Motor disabled and safe.")
-    
