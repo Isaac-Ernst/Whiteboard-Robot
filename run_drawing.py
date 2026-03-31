@@ -18,8 +18,11 @@ INCHES_PER_STEP = SPOOL_CIRCUMFERENCE / STEPS_PER_REV
 
 # --- Global Memory ---
 # We assume the robot starts perfectly homed at top-center
-current_left_in = MOTOR_DISTANCE_INCHES / 2.0
-current_right_in = MOTOR_DISTANCE_INCHES / 2.0
+# current_left_in = MOTOR_DISTANCE_INCHES / 2.0
+# current_right_in = MOTOR_DISTANCE_INCHES / 2.0
+
+current_left_in = 18.0 
+current_right_in = 18.0
 
 def setup_gpio():
     GPIO.setwarnings(False)
