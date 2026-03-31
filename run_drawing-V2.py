@@ -161,5 +161,4 @@ finally:
         pwm.stop()
     GPIO.output(M1_EN, GPIO.HIGH) #
     GPIO.output(M2_EN, GPIO.HIGH) #
-    GPIO.cleanup()
-    
+    print("Motors disabled and safe.")
