@@ -11,7 +11,7 @@ DELAY = 0.002                 #
 # --- Motor & Servo Pins ---
 M1_DIR, M1_STEP, M1_EN = 4, 17, 5   #
 M2_DIR, M2_STEP, M2_EN = 27, 22, 6  #
-SERVO_PIN = 13                      # Suggested PWM pin for SG90
+SERVO_PIN = 18                      # Suggested PWM pin for SG90
 
 # --- Servo Angles (Adjust these for your marker holder) ---
 PEN_UP_ANGLE = 7.5    
