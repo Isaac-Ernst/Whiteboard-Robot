@@ -186,5 +186,5 @@ finally:
     if pwm: pwm.stop()
     GPIO.output(M1_EN, GPIO.HIGH)
     GPIO.output(M2_EN, GPIO.HIGH)
-    GPIO.cleanup()
+    # GPIO.cleanup()
     
