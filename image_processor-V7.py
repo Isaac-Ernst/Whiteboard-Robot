@@ -99,4 +99,4 @@ def process_any_image(image_path, output_path):
     print(f"Success! Instructions generated in {output_path}")
 
 # You can now throw any image at it
-process_any_image("atm-best.jpg", "drawing.txt")
+process_any_image("tamu-best(final).jpg", "drawing.txt")
