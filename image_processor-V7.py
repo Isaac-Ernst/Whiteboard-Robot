@@ -6,7 +6,7 @@ BOARD_WIDTH_INCHES = 36.0
 MAX_DRAW_WIDTH = 24.0    # Horizontal limit
 MAX_DRAW_HEIGHT = 18.0   # Vertical limit (to stay in the 'sweet spot')
 DRAW_START_Y = 10.0      # Top margin
-LINE_SPACING_INCHES = 0.2  
+LINE_SPACING_INCHES = 0.15  
 
 def get_clean_segments(mask, pt1, pt2, reverse=False):
     h, w = mask.shape
