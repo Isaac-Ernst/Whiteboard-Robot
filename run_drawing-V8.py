@@ -110,18 +110,23 @@ def move_motors(target_x, target_y):
     current_x, current_y = target_x, target_y
 
 def manual_setup():
-    """WASD Controls to position the gondola before drawing"""
+    """Smoother WASD Controls for the vertical track"""
     global current_x, current_y
-    print("\n--- MANUAL SETUP PHASE ---")
-    print("Use WASD to move (0.25\" increments).")
-    print("Space: Toggle Pen | Enter: Start Drawing | Q: Quit")
+    print("\n--- SMOOTH SETUP PHASE ---")
+    print("W/S: Vert | A/D: Horiz | Enter: Start | Q: Quit")
     
     pen_state = "UP"
-    step_size = 0.25 # Inches per keypress
+    # Smaller steps to prevent the pendulum from swinging
+    step_size = 0.1 
+    # Faster delay for setup to move past the 'shaking' frequency
+    JOG_DELAY = 0.002 
 
     while True:
-        print(f"Current Position: ({current_x:.2f}, {current_y:.2f}) | Pen: {pen_state}", end='\r')
         char = getch().lower()
+        
+        # We temporarily swap to JOG_DELAY for setup
+        original_delay = globals()['DELAY']
+        globals()['DELAY'] = JOG_DELAY
         
         if char == 'w': move_motors(current_x, current_y - step_size)
         elif char == 's': move_motors(current_x, current_y + step_size)
@@ -130,11 +135,14 @@ def manual_setup():
         elif char == ' ':
             pen_state = "DOWN" if pen_state == "UP" else "UP"
             set_pen(pen_state)
-        elif char == '\r' or char == '\n': # Enter key
-            print("\nSetup Locked. Starting File...")
+        elif char == '\r' or char == '\n':
+            globals()['DELAY'] = original_delay # Restore for drawing
+            print("\nPosition Locked.")
             break
         elif char == 'q':
-            sys.exit("\nSetup Cancelled.")
+            sys.exit("\nQuit.")
+        
+        globals()['DELAY'] = original_delay
 
 def run_drawing_file(filename):
     try:
