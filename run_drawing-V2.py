@@ -4,9 +4,9 @@ import RPi.GPIO as GPIO
 
 # --- Physical Dimensions ---
 MOTOR_DISTANCE_INCHES = 36.0  #
-SPOOL_DIAMETER_INCHES = 1.0   #
+SPOOL_DIAMETER_INCHES = 1.1   #
 STEPS_PER_REV = 200           #
-DELAY = 0.002                 #
+DELAY = 0.003                 #
 
 # --- Motor & Servo Pins ---
 M1_DIR, M1_STEP, M1_EN = 4, 17, 5   #
