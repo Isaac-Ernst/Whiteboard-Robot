@@ -12,8 +12,8 @@ STEPS_PER_REV = 200
 DELAY = 0.003  # Your updated delay for torque
 
 # --- Motor & Servo Pins (Updated Pins) ---
-M1_DIR, M1_STEP, M1_EN = 27, 22, 6    #
-M2_DIR, M2_STEP, M2_EN = 4, 17, 5     #
+M1_DIR, M1_STEP, M1_EN = 27, 22, 6    
+M2_DIR, M2_STEP, M2_EN = 4, 17, 5
 SERVO_PIN = 18                        
 
 # --- Servo Angles ---
