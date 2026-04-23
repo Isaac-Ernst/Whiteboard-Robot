@@ -1,46 +1,39 @@
 import math
 import time
-import sys
-import tty
-import termios
 import RPi.GPIO as GPIO
 
 # --- Physical Dimensions ---
 MOTOR_DISTANCE_INCHES = 36.0  
-SPOOL_DIAMETER_INCHES = 1.0   
+SPOOL_DIAMETER_INCHES = 1.1   # Updated per your latest code
 STEPS_PER_REV = 200           
-DELAY = 0.003  # Your updated delay for torque
+DELAY = 0.003                 # Slightly slower for better torque
 
-# --- Motor & Servo Pins (Updated Pins) ---
-M1_DIR, M1_STEP, M1_EN = 27, 22, 6    
-M2_DIR, M2_STEP, M2_EN = 4, 17, 5
-SERVO_PIN = 18                        
+# --- Motor & Servo Pins ---
+M1_DIR, M1_STEP, M1_EN = 27, 22, 6   # Left Motor
+M2_DIR, M2_STEP, M2_EN = 4, 17, 5    # Right Motor
+SERVO_PIN = 18                      
 
 # --- Servo Angles ---
 PEN_UP_ANGLE = 7.5    
 PEN_DOWN_ANGLE = 11.0 
 
+# --- Positioning & Flip Fixes ---
+# This pushes the logo 10 inches down so (18, 0) in your file 
+# is physically 10 inches below the motors
+Y_OFFSET = 10.0              
+# Set this to True to flip the image vertically if it's still upside down
+FLIP_VERTICAL = True        
+
 # --- Math Conversions ---
 SPOOL_CIRCUMFERENCE = math.pi * SPOOL_DIAMETER_INCHES   
 INCHES_PER_STEP = SPOOL_CIRCUMFERENCE / STEPS_PER_REV   
 
-# Global state
-current_x = 18.0   # Current logical X position
-current_y = 0.0    # Current logical Y position
-current_left_in = 18.0   
-current_right_in = 18.0  
+# --- Homing Calculation ---
+# Starting at physical (18, 10). 
+# L = sqrt(18^2 + 10^2) = 20.5912 inches
+current_left_in = 20.5912   
+current_right_in = 20.5912  
 pwm = None 
-
-def getch():
-    """Captures a single keypress without needing Enter"""
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return ch
 
 def setup_gpio():
     global pwm
@@ -52,6 +45,7 @@ def setup_gpio():
     GPIO.setup(SERVO_PIN, GPIO.OUT)
     pwm = GPIO.PWM(SERVO_PIN, 50) 
     pwm.start(PEN_UP_ANGLE) 
+    # Disable motors initially
     GPIO.output(M1_EN, GPIO.HIGH) 
     GPIO.output(M2_EN, GPIO.HIGH) 
 
@@ -64,14 +58,24 @@ def set_pen(state):
     time.sleep(0.3)
 
 def move_motors(target_x, target_y):
-    global current_left_in, current_right_in, current_x, current_y
+    global current_left_in, current_right_in
     
-    # Mirroring Fix
-    logical_x = MOTOR_DISTANCE_INCHES - target_x
+    # --- FLIP & OFFSET LOGIC ---
+    if FLIP_VERTICAL:
+        # Subtract from 15 because your file goes from Y=10 to Y=27
+        # This keeps the logo oriented correctly
+        target_y = 28.0 - target_y 
     
-    # Inverse Kinematics
-    target_left_in = math.sqrt(logical_x**2 + target_y**2)
-    target_right_in = math.sqrt((MOTOR_DISTANCE_INCHES - logical_x)**2 + target_y**2)
+    # Add the safety buffer so it doesn't hit the motors
+    physical_y = target_y + Y_OFFSET
+    
+    # Mirror the X-axis
+    target_x = MOTOR_DISTANCE_INCHES - target_x
+    
+    # Calculate target physical lengths (Pythagorean Theorem)
+    # $$L = \sqrt{x^2 + y^2}$$
+    target_left_in = math.sqrt(target_x**2 + physical_y**2)
+    target_right_in = math.sqrt((MOTOR_DISTANCE_INCHES - target_x)**2 + physical_y**2)
     
     delta_left = target_left_in - current_left_in
     delta_right = target_right_in - current_right_in
@@ -79,6 +83,7 @@ def move_motors(target_x, target_y):
     steps_left = int(round(delta_left / INCHES_PER_STEP))
     steps_right = int(round(delta_right / INCHES_PER_STEP))
     
+    # Set Directions
     GPIO.output(M1_DIR, True if steps_left > 0 else False) 
     GPIO.output(M2_DIR, True if steps_right > 0 else False)
     
@@ -88,11 +93,13 @@ def move_motors(target_x, target_y):
     if max_steps > 0:
         GPIO.output(M1_EN, GPIO.LOW)
         GPIO.output(M2_EN, GPIO.LOW)
+        
         l_cnt, r_cnt = 0, 0
         for _ in range(max_steps):
             l_cnt += steps_left
             r_cnt += steps_right
             s_L, s_R = False, False
+            
             if l_cnt >= max_steps:
                 GPIO.output(M1_STEP, GPIO.HIGH)
                 l_cnt -= max_steps
@@ -101,48 +108,14 @@ def move_motors(target_x, target_y):
                 GPIO.output(M2_STEP, GPIO.HIGH)
                 r_cnt -= max_steps
                 s_R = True
+                
             time.sleep(DELAY)
             if s_L: GPIO.output(M1_STEP, GPIO.LOW)
             if s_R: GPIO.output(M2_STEP, GPIO.LOW)
             time.sleep(DELAY)
 
-    current_left_in, current_right_in = target_left_in, target_right_in
-    current_x, current_y = target_x, target_y
-
-def manual_setup():
-    """Smoother WASD Controls for the vertical track"""
-    global current_x, current_y
-    print("\n--- SMOOTH SETUP PHASE ---")
-    print("W/S: Vert | A/D: Horiz | Enter: Start | Q: Quit")
-    
-    pen_state = "UP"
-    # Smaller steps to prevent the pendulum from swinging
-    step_size = 0.1 
-    # Faster delay for setup to move past the 'shaking' frequency
-    JOG_DELAY = 0.002 
-
-    while True:
-        char = getch().lower()
-        
-        # We temporarily swap to JOG_DELAY for setup
-        original_delay = globals()['DELAY']
-        globals()['DELAY'] = JOG_DELAY
-        
-        if char == 'w': move_motors(current_x, current_y - step_size)
-        elif char == 's': move_motors(current_x, current_y + step_size)
-        elif char == 'a': move_motors(current_x - step_size, current_y)
-        elif char == 'd': move_motors(current_x + step_size, current_y)
-        elif char == ' ':
-            pen_state = "DOWN" if pen_state == "UP" else "UP"
-            set_pen(pen_state)
-        elif char == '\r' or char == '\n':
-            globals()['DELAY'] = original_delay # Restore for drawing
-            print("\nPosition Locked.")
-            break
-        elif char == 'q':
-            sys.exit("\nQuit.")
-        
-        globals()['DELAY'] = original_delay
+    current_left_in = target_left_in
+    current_right_in = target_right_in
 
 def run_drawing_file(filename):
     try:
@@ -161,16 +134,22 @@ def run_drawing_file(filename):
 # --- Execution ---
 try:
     setup_gpio()
-    manual_setup() # Runs WASD phase first
+    print(f"--- READY ---")
+    print(f"1. Physically hang pen exactly 10 inches below center.")
+    print(f"2. Ensure strings are 20.59 inches long.")
+    input("Press Enter to begin the draw...")
+    
     run_drawing_file("drawing.txt")
+    
+    # Return to home safely
     set_pen("UP")
-    move_motors(18.0, 0.0)
-    print("Drawing Complete!")
+    move_motors(18.0, 0.0) 
+    print("TAMU Logo Complete!")
+
 except KeyboardInterrupt:
     print("\nEmergency Stop.")
+
 finally:
     if pwm: pwm.stop()
     GPIO.output(M1_EN, GPIO.HIGH) 
     GPIO.output(M2_EN, GPIO.HIGH) 
-    # GPIO.cleanup()
-    
