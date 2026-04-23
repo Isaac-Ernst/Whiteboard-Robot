@@ -78,8 +78,12 @@ def move_motors(target_x, target_y):
     steps_left = int(round(delta_left / INCHES_PER_STEP))
     steps_right = int(round(delta_right / INCHES_PER_STEP))
     
-    GPIO.output(M1_DIR, True if steps_left > 0 else False) 
-    GPIO.output(M2_DIR, True if steps_right > 0 else False)
+    # GPIO.output(M1_DIR, True if steps_left > 0 else False) 
+    # GPIO.output(M2_DIR, True if steps_right > 0 else False)
+
+    # Reversed Logic
+    GPIO.output(M1_DIR, False if steps_left > 0 else True) 
+    GPIO.output(M2_DIR, False if steps_right > 0 else True)
     
     steps_left, steps_right = abs(steps_left), abs(steps_right)
     max_steps = max(steps_left, steps_right)
