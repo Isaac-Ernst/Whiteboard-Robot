@@ -20,7 +20,7 @@ PEN_DOWN_ANGLE = 11.0
 # --- Positioning & Flip Fixes ---
 Y_OFFSET = 5.0              # Pushes drawing down 5" to prevent jamming
 DRAWING_HEIGHT_INCHES = 20.0 # Adjust this to the height of your image
-FLIP_VERTICAL = True        # Set to False if you want to undo the Y-flip
+FLIP_VERTICAL = False        # Set to False if you want to undo the Y-flip
 FLIP_HORIZONTAL = True      # Re-adding the X-flip fix
 
 # --- Math Conversions ---
@@ -142,4 +142,3 @@ finally:
     GPIO.output(M1_EN, GPIO.HIGH) 
     GPIO.output(M2_EN, GPIO.HIGH) 
     print("Motors disabled.")
-    
