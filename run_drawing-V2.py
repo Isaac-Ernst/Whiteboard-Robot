@@ -14,7 +14,7 @@ M2_DIR, M2_STEP, M2_EN = 27, 22, 6
 SERVO_PIN = 18                      
 
 # --- Servo Angles ---
-PEN_UP_ANGLE = 100.0    
+PEN_UP_ANGLE = 50.0    
 PEN_DOWN_ANGLE = 0.0 
 
 # --- Positioning & Flip Fixes ---
