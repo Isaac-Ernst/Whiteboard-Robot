@@ -15,7 +15,7 @@ SERVO_PIN = 18
 
 # --- Servo Angles ---
 PEN_UP_ANGLE = 8.7    # Approximately 90 degrees
-PEN_DOWN_ANGLE = 8.4 # Slightly further to press the pen
+PEN_DOWN_ANGLE = 8.3 # Slightly further to press the pen
 
 # --- Positioning & Flip Fixes ---
 Y_OFFSET = 5.0              # Pushes drawing down 5" to prevent jamming
