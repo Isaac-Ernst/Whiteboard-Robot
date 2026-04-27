@@ -58,5 +58,6 @@ finally:
     # We do NOT cleanup GPIO here so the motors STAY locked 
     # while you finish your physical setup. 
     pwm.stop()
+    GPIO.cleanup()  # This will release the motors, so we skip it here.
     print("\nServo PWM stopped. Motors are still ENGAGED.")
     print("To release the motors, you must restart the Pi or run a cleanup script.")
