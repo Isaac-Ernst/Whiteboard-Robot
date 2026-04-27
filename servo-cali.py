@@ -55,9 +55,28 @@ except KeyboardInterrupt:
     pass
 
 finally:
-    # We do NOT cleanup GPIO here so the motors STAY locked 
-    # while you finish your physical setup. 
-    pwm.stop()
-    GPIO.cleanup()  # This will release the motors, so we skip it here.
-    print("\nServo PWM stopped. Motors are still ENGAGED.")
-    print("To release the motors, you must restart the Pi or run a cleanup script.")
+    print("\n--- SAFELY SHUTTING DOWN ---")
+    
+    # 1. Stop the Servo first to reduce electrical noise
+    if pwm:
+        pwm.stop()
+    
+    # 2. Force the Enable pins HIGH to cut power to the coils
+    # This releases the holding torque so the weight doesn't "snap" the motor
+    GPIO.output(M1_EN, GPIO.HIGH)
+    GPIO.output(M2_EN, GPIO.HIGH)
+    
+    # 3. Brief pause to let the magnetic fields in the motors collapse
+    time.sleep(0.1)
+    
+    # 4. TARGETED CLEANUP 
+    # Instead of cleaning up everything, only cleanup the Servo 
+    # and EN pins. Keep the STEP pins as OUTPUTS held LOW.
+    # This keeps the "antenna" grounded so it can't pick up noise.
+    GPIO.setup(M1_STEP, GPIO.OUT, initial=GPIO.LOW)
+    GPIO.setup(M2_STEP, GPIO.OUT, initial=GPIO.LOW)
+    
+    # Optional: Only cleanup the servo pin to stop PWM
+    GPIO.cleanup(SERVO_PIN) 
+    
+    print("Motors disabled and signal pins grounded. Shaking should stop.")
